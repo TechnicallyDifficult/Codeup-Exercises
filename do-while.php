@@ -1,8 +1,8 @@
 <?php
 
-$i = 100;
+$a = 2;
 
 do {
-	echo $i . PHP_EOL;
-	$i -= 5;
-} while ($i >= -10);
+	echo $a . PHP_EOL;
+	$a *= $a;
+} while ($a < 1000000);
