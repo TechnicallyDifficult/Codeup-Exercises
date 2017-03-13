@@ -27,5 +27,9 @@ if (0 < $z or $z < 10) {
 // If 0 is less than $x AND $x is less than 10
 // then echo the result as a sentence "0 is less than {$x} AND {$x} is less than 10".
 
+if (0 < $x and $x < 10) {
+	echo "0 is less than $x AND $x is less than 10" . PHP_EOL;
+}
+
 // TODO:
 // repeat the if statement for $y and $z.
