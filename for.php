@@ -89,7 +89,7 @@ while(!$ok) {
 	}
 }
 
-echo $increment;
+
 
 for ($i = $start, fwrite(STDOUT, PHP_EOL . 'BEGINNING PROCESS' . PHP_EOL); $i <= $end; $i += $increment) {
 	fwrite(STDOUT, $i . PHP_EOL);
