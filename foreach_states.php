@@ -79,3 +79,53 @@ foreach ($states as $abbr => $state) {
 		fwrite(STDOUT, "$abbr, $state" . PHP_EOL);
 	}
 }
+
+fwrite(STDOUT, PHP_EOL);
+
+$statesStartingAndEndingWithVowels = [];
+
+foreach ($states as $state) {
+	if (in_array(substr($state, 0, 1), $vowels) and in_array(strtoupper(substr($state, -1)), $vowels)) {
+		array_push($statesStartingAndEndingWithVowels, $state);
+	}
+}
+
+fwrite(STDOUT, 'These are the states starting and ending with vowels:' . PHP_EOL);
+foreach ($statesStartingAndEndingWithVowels as $state) {
+	fwrite(STDOUT, $state . PHP_EOL);
+}
+
+fwrite(STDOUT, PHP_EOL);
+
+$statesWithMoreThanOneWordNames = [];
+
+foreach ($states as $state) {
+	if (strpos($state, ' ')) {
+		array_push($statesWithMoreThanOneWordNames, $state);
+	}
+}
+
+fwrite(STDOUT, 'These are the states with more than one word in their name:' . PHP_EOL);
+
+foreach ($statesWithMoreThanOneWordNames as $state) {
+	fwrite(STDOUT, $state . PHP_EOL);
+}
+
+fwrite(STDOUT, PHP_EOL);
+
+$arrayOfCardinalStates = [];
+$cardinalDirections = ['North', 'South', 'East', 'West'];
+
+foreach ($states as $state) {
+	foreach ($cardinalDirections as $direction) {
+		if (strpos($state, $direction) !== false) {
+			array_push($arrayOfCardinalStates, $state);
+		}
+	}
+}
+
+fwrite(STDOUT, 'These are states with north, south, east, or west in their name:' . PHP_EOL);
+
+foreach ($arrayOfCardinalStates as $state) {
+	fwrite(STDOUT, $state . PHP_EOL);
+}
