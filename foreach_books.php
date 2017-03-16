@@ -24,9 +24,11 @@ $books = array(
 );
 
 foreach ($books as $title => $book) {
-    fwrite(STDOUT, "Title: $title" . PHP_EOL);
-    foreach ($book as $k => $v) {
-        fwrite(STDOUT, "\t$k: $v" . PHP_EOL);
+    if ($book['published'] > 1950) {
+        fwrite(STDOUT, "Title: $title" . PHP_EOL);
+        foreach ($book as $k => $v) {
+            fwrite(STDOUT, "\t$k: $v" . PHP_EOL);
+        }
+        fwrite(STDOUT, PHP_EOL);
     }
-    fwrite(STDOUT, PHP_EOL);
 }
