@@ -86,7 +86,7 @@ $statesStartingAndEndingWithVowels = [];
 
 foreach ($states as $state) {
 	if (in_array(substr($state, 0, 1), $vowels) and in_array(strtoupper(substr($state, -1)), $vowels)) {
-		array_push($statesStartingAndEndingWithVowels, $state);
+		$statesStartingAndEndingWithVowels[] = $state;
 	}
 }
 
@@ -101,7 +101,7 @@ $statesWithMoreThanOneWordNames = [];
 
 foreach ($states as $state) {
 	if (strpos($state, ' ')) {
-		array_push($statesWithMoreThanOneWordNames, $state);
+		$statesWithMoreThanOneWordNames[] = $state;
 	}
 }
 
@@ -119,7 +119,7 @@ $cardinalDirections = ['North', 'South', 'East', 'West'];
 foreach ($states as $state) {
 	foreach ($cardinalDirections as $direction) {
 		if (strpos($state, $direction) !== false) {
-			array_push($arrayOfCardinalStates, $state);
+			$arrayOfCardinalStates[] = $state;
 		}
 	}
 }
