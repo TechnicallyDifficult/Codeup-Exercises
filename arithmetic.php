@@ -2,38 +2,36 @@
 
 function add($a, $b)
 {
-	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
-	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
+	$valueCheck = throwErrorMessage($a, $b);
+	if ($valueCheck) return $valueCheck;
 	return $a + $b;
 }
 
 function subtract($a, $b)
 {
-	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
-	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
-	if (!is_numeric($a) or !is_numeric($b)) return 'ERROR -- BOTH VALUES MUST BE NUMERIC';
+	$valueCheck = throwErrorMessage($a, $b);
+	if ($valueCheck) return $valueCheck;
 	return $a - $b;
 }
 
 function multiply($a, $b)
 {
-	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
-	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
+	$valueCheck = throwErrorMessage($a, $b);
+	if ($valueCheck) return $valueCheck;
 	$result = 0;
 	$a *= $b / abs($b);
 	$b = abs($b);
 
-	for ($i = 0; $i < $b; $i++) { 
+	for ($i = 0; $i < $b; $i++) {
 		$result += $a;
 	}
-
 	return $result;
 }
 
 function divide($a, $b)
 {
-	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
-	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
+	$valueCheck = throwErrorMessage($a, $b);
+	if ($valueCheck) return $valueCheck;
 	if ($b == 0) return 'undefined';
 	$result = '';
 	$r = $a;
@@ -61,8 +59,8 @@ function divide($a, $b)
 
 function modulus($a, $b)
 {
-	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
-	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
+	$valueCheck = throwErrorMessage($a, $b);
+	if ($valueCheck) return $valueCheck;
 	$a = (int) $a;
 	$b = (int) $b;
 	if ($b == 0) return 'undefined';
@@ -70,4 +68,16 @@ function modulus($a, $b)
 	for ($i = 0; multiply($i, $b) <= $a; $i++) {
 		if (multiply($i + 1, $b) > $a) return $a - $i;
 	}
+}
+
+function throwErrorMessage($A, $B)
+{
+	if (is_numeric($A) and is_numeric($B)) return false;
+	$message = 'ERROR -- NON-NUMERIC VALUES: ';
+	if (!is_numeric($A)) {
+		$message .= is_string($A) ? "\"$A\"" : $A;
+		if (!is_numeric($B)) $message .= ', ';
+	}
+	if (!is_numeric($B)) $message .= is_string($B) ? "\"$B\"" : $B;
+	return $message;
 }
