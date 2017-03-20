@@ -46,3 +46,9 @@ $companies = [
 ];
 
 var_dump($companies);
+
+echo PHP_EOL;
+
+ksort($companies);
+
+var_dump($companies);
