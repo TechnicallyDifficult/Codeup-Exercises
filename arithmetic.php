@@ -28,7 +28,7 @@ function divide($a, $b)
 	$result = '';
 	$r = $a;
 	$i = 0;
-	while (multiply(((float) $result), $b) < $a) {
+	while (multiply((float) $result, $b) < $a) {
 		$value = 0;
 		while ($i <= $r) {
 			if ($i + $b <= $r) {
@@ -47,4 +47,14 @@ function divide($a, $b)
 		$i = 0;
 	}
 	return $result;
+}
+
+function modulus($a, $b)
+{
+	$a = (int) $a;
+	$b = (int) $b;
+	if ($a < $b) return $a;
+	for ($i = 0; multiply($i, $b) <= $a; $i++) {
+		if (multiply($i + 1, $b) > $a) return $a - $i;
+	}
 }
