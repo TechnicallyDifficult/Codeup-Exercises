@@ -25,6 +25,7 @@ function multiply($a, $b)
 
 function divide($a, $b)
 {
+	if ($b == 0) return 'undefined';
 	$result = '';
 	$r = $a;
 	$i = 0;
@@ -53,6 +54,7 @@ function modulus($a, $b)
 {
 	$a = (int) $a;
 	$b = (int) $b;
+	if ($b == 0) return 'undefined';
 	if ($a < $b) return $a;
 	for ($i = 0; multiply($i, $b) <= $a; $i++) {
 		if (multiply($i + 1, $b) > $a) return $a - $i;
