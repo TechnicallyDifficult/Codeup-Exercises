@@ -2,16 +2,23 @@
 
 function add($a, $b)
 {
+	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
+	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
 	return $a + $b;
 }
 
 function subtract($a, $b)
 {
+	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
+	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
+	if (!is_numeric($a) or !is_numeric($b)) return 'ERROR -- BOTH VALUES MUST BE NUMERIC';
 	return $a - $b;
 }
 
 function multiply($a, $b)
 {
+	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
+	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
 	$result = 0;
 	$a *= $b / abs($b);
 	$b = abs($b);
@@ -25,6 +32,8 @@ function multiply($a, $b)
 
 function divide($a, $b)
 {
+	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
+	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
 	if ($b == 0) return 'undefined';
 	$result = '';
 	$r = $a;
@@ -52,6 +61,8 @@ function divide($a, $b)
 
 function modulus($a, $b)
 {
+	if (!is_numeric($a)) return "ERROR -- $a IS NON-NUMERIC";
+	if (!is_numeric($b)) return "ERROR -- $b IS NON-NUMERIC";
 	$a = (int) $a;
 	$b = (int) $b;
 	if ($b == 0) return 'undefined';
