@@ -1,7 +1,8 @@
 <?php
 
 // Converts array into list n1, n2, ..., and n3
-function humanizedList($array) {
+function humanizedList($array, $sorting = false) {
+	if ($sorting) sort($array);
 	$last = array_pop($array);
 	return implode(', ', $array) . ', and ' . $last;
 }
