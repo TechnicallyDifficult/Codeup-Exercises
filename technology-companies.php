@@ -47,8 +47,27 @@ $companies = [
 
 var_dump($companies);
 
-echo PHP_EOL;
+echo PHP_EOL . '----------------------------------------------' . PHP_EOL . PHP_EOL;
 
 ksort($companies);
+
+var_dump($companies);
+
+echo PHP_EOL . '----------------------------------------------' . PHP_EOL . PHP_EOL;
+
+foreach ($companies as $company => $names) {
+    $newOrder = [];
+    sort($names);
+    foreach ($names as $name) {
+        $newOrder[] = $name;
+    }
+    $companies[$company] = $newOrder;
+}
+
+var_dump($companies);
+
+echo PHP_EOL . '----------------------------------------------' . PHP_EOL . PHP_EOL;
+
+arsort($companies);
 
 var_dump($companies);
