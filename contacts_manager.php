@@ -289,7 +289,6 @@ function deleteContact()
 						$deleteRequest = strtolower(trim(fgets(STDIN)));
 						$deleteRequest = preg_replace('~\W~', '', $deleteRequest);
 						if (preg_match('~^[0(0?cancel)]$~', $deleteRequest)) {
-							// returns to beginning of delete function
 							break;
 						}
 
@@ -375,41 +374,33 @@ function addContact()
 	fgets(STDIN);
 }
 
-function search()
+function searchContacts()
 {
 	$parsedContacts = parseContacts(getContacts());
-}
-
-function searchContacts($args)
-{
 	$search = '';
-
-	foreach ($args as $key => $arg) {
-		if ($key !== 0) $search .= $arg . ' ';
-	}
-	$search = trim($search);
-
 	while ($search === '') {
 		fwrite(STDOUT, PHP_EOL . 'enter search term(s) space separated' . PHP_EOL . '>');
 		$search = (trim(fgets(STDIN)));
-		$search = preg_replace('~[^\w ]~', '', $search);
+		$search = preg_replace(['~[^\w ]~' '~  +~'], ['', ' '], $search);
+		if ($search == '0') return;
+		$search = preg_replace('~[^a-zA-Z ]~', '', $search);
 	}
+
 	$searchTerms = explode(' ', strtolower($search));
 	$searchResults = [];
-	foreach ($contacts as $contact) {
+
+	foreach ($contacts as $index => $contact) {
 		foreach ($searchTerms as $term) {
-			if (strpos(strtolower($contact), $term) === false) {
+			if (strpos(strtolower($contact['name']), $term) === false) {
 				continue 2;
 			}
 		}
-		$searchResults[] = $contact;
+		$searchResults[] = ['index' => $index, 'contact' => $contact];
 	}
-	fwrite(STDOUT, PHP_EOL . $search . PHP_EOL . 'found ' . sizeof($searchResults) . ' results' . (sizeof($searchResults) ? ':' : '') . PHP_EOL);
-	foreach ($searchResults as $result) {
-		fwrite(STDOUT, "\t" . $result . PHP_EOL);
-	}
-	fwrite(STDOUT, PHP_EOL);
+	return $searchResults;
 }
+
+
 
 function showDeleteMenu()
 {
