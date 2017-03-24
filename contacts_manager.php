@@ -15,6 +15,16 @@ function getContacts()
 	return $contacts;
 }
 
+function getContactIndexes()
+{
+	$contacts = getContacts();
+	if ($contacts === NULL) return NULL;
+	$indexes = [];
+	foreach ($contacts as $index => $contact) {
+		$indexes[] = $index;
+	}
+}
+
 function parseContacts($contacts)
 {
 	if (is_array($contacts)) {
@@ -35,13 +45,13 @@ function parseContacts($contacts)
 	return $contacts;
 }
 
-function generateList($parsedContacts, $last = false)
+function generateList($title, $parsedContacts, $last = false)
 {
 	$longest = 1;
 
 	$list = [];
 	$list[] = ['  ┌─────────────────────────────', '┐'];
-	$list[] = ['  │        ', 'CONTACTS LIST        ', '│'];
+	$list[] = ['  │       ', "$title       ", '│'];
 	$list[] = ['  ├──────────', '┬──────────────────┤'];
 	$list[] = ['  │   ', 'Name   ', '│   Phone number   │'];
 	$list[] = ['  ├──────────', '┼──────────────────┤'];
@@ -169,15 +179,14 @@ function mainMenu()
 	fwrite(STDOUT, PHP_EOL . $menu . PHP_EOL . PHP_EOL);
 }
 
-function listContacts($parsedContacts, $last = false)
+function listContacts($title, $parsedContacts, $last = false)
 {
-	$parsedContacts = parseContacts(getContacts());
-	if ($parsedContacts === NULL) fwrite(STDOUT, 'no saved contacts...');
-	fwrite(STDOUT, PHP_EOL . generateList($parsedContacts, $last) . PHP_EOL . PHP_EOL);
+	if ($parsedContacts === NULL) {
+		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to main menu' . PHP_EOL);
+		return;
+	}
+	fwrite(STDOUT, PHP_EOL . generateList($title, $parsedContacts, $last) . PHP_EOL . PHP_EOL);
 }
-
-function rememberFromList($parsedContacts)
-{}
 
 function confirm()
 {
@@ -193,9 +202,15 @@ function confirm()
 	}
 }
 
-function deleteFromList($contacts, $parsedContacts)
+function deleteFromList($indexes, $parsedContacts)
 {
-	listContacts($parsedContacts, true);
+	if ($parsedContacts === NULL) {
+		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL);
+		fgets(STDIN);
+		return;
+	}
+
+	listContacts('SEARCH  RESULTS', $parsedContacts, true);
 
 	fwrite(STDOUT, 'which to delete?' . PHP_EOL . PHP_EOL);
 
@@ -204,37 +219,59 @@ function deleteFromList($contacts, $parsedContacts)
 		$input = strtolower(trim(fgets(STDIN)));
 		$input = preg_replace(['~[^\w ]~', '~  +~'], ['', ' '], $input);
 		if ($input === '0') {
-			break;
+			return;
 		}
 
 		$toDelete = NULL;
 		foreach ($parsedContacts as $index => $contact) {
 			if ($input == $index or $input == strtolower($contact['name']) or $input == $index . strtolower($contact['name'])) {
-				$toDelete = $index;
+				$deleteRequest = $index;
 			}
 		}
 
-		if ($toDelete !== NULL) {
-			fwrite(STDOUT, PHP_EOL . 'really delete "' . implode(' | ', $parsedContacts[$toDelete]) . '"?' . PHP_EOL . '(y/n)' . PHP_EOL . '>');
+		if ($deleteRequest !== NULL) {
+			$toDelete = $indexes[$deleteRequest];
+			fwrite(STDOUT, PHP_EOL . 'really delete "' . implode(' | ', $parsedContacts[$deleteRequest]) . '"?' . PHP_EOL . '(y/n)' . PHP_EOL . '>');
 			$confirm = confirm();
 
 			if ($confirm) {
-				unset($contacts[$toDelete]);
+				$allContacts = getContacts();
+				unset($allContacts[$toDelete]);
 				$filename = 'contacts.txt';
-				$fileContents = implode(PHP_EOL, $contacts);
+				$fileContents = implode(PHP_EOL, $allContacts);
 				$handle = fopen($filename, 'w');
 				$success = fwrite($handle, $fileContents);
 				fclose($handle);
-				fwrite(STDOUT, PHP_EOL . ($success ? 'successfully deleted contact: ' . implode(' | ', $parsedContacts[$toDelete]) : 'something went wrong!') . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL);
+				fwrite(STDOUT, PHP_EOL . ($success ? 'successfully deleted contact: ' . implode(' | ', $parsedContacts[$deleteRequest]) : 'something went wrong!') . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL);
 				fgets(STDIN);
-				break;
+				return;
 			} else {
-				break;
+				return;
 			}
 		} else {
 			fwrite(STDOUT, 'must pick vaid option from list' . PHP_EOL . PHP_EOL);
 		}
 	}
+}
+
+function searchAndDelete()
+{
+	$searchResults = searchContacts();
+
+	if (empty($searchResults)) {
+		fwrite(STDOUT, PHP_EOL . 'no results found' . PHP_EOL . 'press enter to return to delete menu');
+		fgets(STDIN);
+		return;
+	}
+
+	$parsedContacts = [];
+	$indexes = [];
+
+	foreach ($searchResults as $result) {
+		$parsedContacts[] = ['name' => $result['name'], 'number' => $result['number']];
+		$indexes[] = $result['index'];
+	}
+	deleteFromList($indexes, $parsedContacts);
 }
 
 function deleteContact()
@@ -252,7 +289,7 @@ function deleteContact()
 		$input = preg_replace(['~[^\w -]~', '~  +~', '~--+~', '~([^^])-~'], ['', ' ', '-', '$1'], $input);
 		switch ($input) {
 			case '-list':
-				listContacts();
+				listContacts('');
 				break;
 			case '':
 			case '-help':
@@ -377,30 +414,34 @@ function addContact()
 function searchContacts()
 {
 	$parsedContacts = parseContacts(getContacts());
+	if ($parsedContacts === NULL) {
+		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . PHP_EOL);
+	}
 	$search = '';
 	while ($search === '') {
 		fwrite(STDOUT, PHP_EOL . 'enter search term(s) space separated' . PHP_EOL . '>');
 		$search = (trim(fgets(STDIN)));
-		$search = preg_replace(['~[^\w ]~' '~  +~'], ['', ' '], $search);
+		$search = preg_replace(['~[^\w ]~', '~  +~'], ['', ' '], $search);
 		if ($search == '0') return;
 		$search = preg_replace('~[^a-zA-Z ]~', '', $search);
 	}
 
 	$searchTerms = explode(' ', strtolower($search));
-	$searchResults = [];
+	$searchResults = [NULL];
 
-	foreach ($contacts as $index => $contact) {
+	foreach ($parsedContacts as $index => $contact) {
 		foreach ($searchTerms as $term) {
 			if (strpos(strtolower($contact['name']), $term) === false) {
 				continue 2;
 			}
 		}
-		$searchResults[] = ['index' => $index, 'contact' => $contact];
+		$searchResults[] = ['name' => $contact['name'], 'number' => $contact['number'], 'index' => $index];
 	}
+
+	unset($searchResults[0]);
+
 	return $searchResults;
 }
-
-
 
 function showDeleteMenu()
 {
@@ -429,7 +470,7 @@ function deleteMenu()
 				break;
 			case '3':
 			case 'list':
-				deleteFromList(getContacts(), parseContacts(getContacts()));
+				deleteFromList(getContactIndexes(), parseContacts(getContacts()));
 				showDeleteMenu();
 				break;
 			case '4':
@@ -438,6 +479,8 @@ function deleteMenu()
 				break;
 			case '5':
 			case 'search':
+				searchAndDelete();
+				showDeleteMenu();
 				break;
 			case '0':
 			case 'back':
@@ -554,7 +597,7 @@ while (true) {
 			break;
 		case '3':
 		case 'list':
-			listContacts(parseContacts(getContacts()));
+			listContacts('CONTACTS LIST', parseContacts(getContacts()));
 			break;
 		case '4':
 		case 'add':
@@ -563,7 +606,7 @@ while (true) {
 			break;
 		case '5':
 		case 'search':
-			searchContacts($command);
+			listContacts('SEARCH  RESULTS', searchContacts());
 			break;
 		case '6':
 		case 'delete':
