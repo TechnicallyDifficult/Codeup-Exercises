@@ -1,12 +1,14 @@
 <?php
 
 for ($i = 1; $i <= 100; $i++) {
-	$output = '';
+	$output = "$i";
 	if ($i % 3 == 0) {
 		$output .= 'Fizz';
+		$output = preg_replace('~\d~', '', $output);
 	}
 	if ($i % 5 == 0) {
 		$output .= 'Buzz';
+		$output = preg_replace('~\d~', '', $output);
 	}
-	fwrite(STDOUT, ($output ? $output : $i) . PHP_EOL);
+	echo $output . PHP_EOL;
 }
