@@ -18,11 +18,16 @@ function getContacts()
 function getContactIndexes()
 {
 	$contacts = getContacts();
-	if ($contacts === NULL) return NULL;
+	if ($contacts === NULL) {
+		return NULL;
+	}
 	$indexes = [];
 	foreach ($contacts as $index => $contact) {
 		$indexes[] = $index;
 	}
+	array_unshift($indexes, NULL);
+	unset($indexes[0]);
+	return $indexes;
 }
 
 function parseContacts($contacts)
@@ -45,7 +50,7 @@ function parseContacts($contacts)
 	return $contacts;
 }
 
-function generateList($title, $parsedContacts, $last = false)
+function generateList($title, $parsedContacts, $cancel = false)
 {
 	$longest = 1;
 
@@ -67,14 +72,15 @@ function generateList($title, $parsedContacts, $last = false)
 		$list[] = ['  └──────────', '┴──────────────────┘'];
 	}
 
+	echo $longest;
+
 	$linelength = $longest % 2 === 1 ? $longest + 32 : $longest + 33;
 
 	foreach ($list as $index => &$line) {
 		while (mb_strlen(implode('', $line)) < $linelength) {
 			switch ($index) {
-				case sizeof($list) - 3:
-					if (!$last) goto end;
 				case 0:
+					case0:
 				case 2:
 				case 4:
 				case sizeof($list) - 1:
@@ -83,8 +89,10 @@ function generateList($title, $parsedContacts, $last = false)
 				case 1:
 				case 3:
 					$line[1] .= ' ';
+				case sizeof($list) - 3:
+					if ($cancel) goto case0;
 				default:
-					end:
+					case_default:
 					$line[0] .= ' ';
 					break;
 			}
@@ -172,27 +180,27 @@ function generateMenu($title, $commands)
 	//  └───────────────────┘
 }
 
-function mainMenu()
+function showMainMenu()
 {
 	$commands = ['menu', 'help', 'list', 'search', 'add', 'delete', 'exit'];
 	$menu = generateMenu('MAIN MENU', $commands);
-	fwrite(STDOUT, PHP_EOL . $menu . PHP_EOL . PHP_EOL);
+	echo PHP_EOL . $menu . PHP_EOL . PHP_EOL;
 }
 
-function listContacts($title, $parsedContacts, $last = false)
+function listContacts($title, $parsedContacts, $cancel = false)
 {
 	if ($parsedContacts === NULL) {
-		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to main menu' . PHP_EOL);
+		echo PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to main menu' . PHP_EOL;
 		return;
 	}
-	fwrite(STDOUT, PHP_EOL . generateList($title, $parsedContacts, $last) . PHP_EOL . PHP_EOL);
+	echo PHP_EOL . generateList($title, $parsedContacts, $cancel) . PHP_EOL . PHP_EOL;
 }
 
 function confirm()
 {
 	$confirm = strtolower(trim(fgets(STDIN)));
 	while (!preg_match('~^[(y(es)?)(no?)]$~', $confirm)) {
-		fwrite(STDOUT, '(y/n)' . PHP_EOL . '>');
+		echo '(y/n)' . PHP_EOL . '>';
 		$confirm = strtolower(trim(fgets(STDIN)));
 	}
 	if (preg_match('~^y(es)?$~', $confirm)) {
@@ -205,24 +213,24 @@ function confirm()
 function deleteFromList($indexes, $parsedContacts)
 {
 	if ($parsedContacts === NULL) {
-		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL);
+		echo PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL;
 		fgets(STDIN);
 		return;
 	}
 
 	listContacts('SEARCH  RESULTS', $parsedContacts, true);
 
-	fwrite(STDOUT, 'which to delete?' . PHP_EOL . PHP_EOL);
+	echo 'which to delete?' . PHP_EOL . PHP_EOL;
 
 	while (true) {
-		fwrite(STDOUT, '>');
+		echo '>';
 		$input = strtolower(trim(fgets(STDIN)));
 		$input = preg_replace(['~[^\w ]~', '~  +~'], ['', ' '], $input);
 		if ($input === '0') {
 			return;
 		}
 
-		$toDelete = NULL;
+		$deleteRequest = NULL;
 		foreach ($parsedContacts as $index => $contact) {
 			if ($input == $index or $input == strtolower($contact['name']) or $input == $index . strtolower($contact['name'])) {
 				$deleteRequest = $index;
@@ -231,7 +239,7 @@ function deleteFromList($indexes, $parsedContacts)
 
 		if ($deleteRequest !== NULL) {
 			$toDelete = $indexes[$deleteRequest];
-			fwrite(STDOUT, PHP_EOL . 'really delete "' . implode(' | ', $parsedContacts[$deleteRequest]) . '"?' . PHP_EOL . '(y/n)' . PHP_EOL . '>');
+			echo PHP_EOL . 'really delete "' . implode(' | ', $parsedContacts[$deleteRequest]) . '"?' . PHP_EOL . '(y/n)' . PHP_EOL . '>';
 			$confirm = confirm();
 
 			if ($confirm) {
@@ -242,14 +250,14 @@ function deleteFromList($indexes, $parsedContacts)
 				$handle = fopen($filename, 'w');
 				$success = fwrite($handle, $fileContents);
 				fclose($handle);
-				fwrite(STDOUT, PHP_EOL . ($success ? 'successfully deleted contact: ' . implode(' | ', $parsedContacts[$deleteRequest]) : 'something went wrong!') . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL);
+				echo PHP_EOL . ($success ? 'successfully deleted contact: ' . implode(' | ', $parsedContacts[$deleteRequest]) : 'something went wrong!') . PHP_EOL . 'press enter to return to delete menu' . PHP_EOL;
 				fgets(STDIN);
 				return;
 			} else {
 				return;
 			}
 		} else {
-			fwrite(STDOUT, 'must pick vaid option from list' . PHP_EOL . PHP_EOL);
+			echo 'must pick vaid option from list' . PHP_EOL . PHP_EOL;
 		}
 	}
 }
@@ -258,8 +266,10 @@ function searchAndDelete()
 {
 	$searchResults = searchContacts();
 
+	if ($searchResults === NULL) return;
+
 	if (empty($searchResults)) {
-		fwrite(STDOUT, PHP_EOL . 'no results found' . PHP_EOL . 'press enter to return to delete menu');
+		echo PHP_EOL . 'no results found' . PHP_EOL . 'press enter to return to delete menu';
 		fgets(STDIN);
 		return;
 	}
@@ -274,140 +284,80 @@ function searchAndDelete()
 	deleteFromList($indexes, $parsedContacts);
 }
 
-function deleteContact()
+function checkForDuplicates($name)
 {
-	$filename = 'contacts.txt';
-	$handle = fopen($filename, 'r');
-	$fileContents = trim(fread($handle, filesize($filename)));
-	fclose($handle);
-	$contacts = explode(PHP_EOL, $fileContents);
+	$contacts = getContacts();
+	$parsedContacts = parseContacts($contacts);
+	if ($parsedContacts === NULL) return NULL;
 
-	fwrite(STDOUT, PHP_EOL . 'enter contact name to delete' . PHP_EOL . 'enter -list to see all or 0 to cancel' . PHP_EOL);
-	while (true) {
-		fwrite(STDOUT, '>');
-		$input = strtolower(trim(fgets(STDIN)));
-		$input = preg_replace(['~[^\w -]~', '~  +~', '~--+~', '~([^^])-~'], ['', ' ', '-', '$1'], $input);
-		switch ($input) {
-			case '-list':
-				listContacts('');
-				break;
-			case '':
-			case '-help':
-				fwrite(STDOUT, PHP_EOL . 'enter contact name to delete' . PHP_EOL . 'enter -list to see all or 0 to cancel' . PHP_EOL);
-				break;
-			case '0':
-				return;
-			default:
-				$input = preg_replace('~-~', '', $input);
+	$duplicate = NULL;
 
-				$searchTerms = explode(' ', $input);
-				$searchResults = [];
+	foreach ($parsedContacts as $index => $contact) {
+		if ($name === $contact['name']) {
+			$duplicate = ['index' => $index, 'contact' => $contact];
+			break;
+		}
+	}
 
-				foreach ($contacts as $key => $contact) {
-					foreach ($searchTerms as $term) {
-						if (strpos(strtolower($contact), $term) === false) {
-							continue 2;
-						}
-					}
-					$searchResults[] = ['name' => $contact, 'key' => $key];
-				}
-				array_unshift($searchResults, NULL);
-				unset($searchResults[0]);
-
-				fwrite(STDOUT, PHP_EOL . $input . PHP_EOL . 'found ' . sizeof($searchResults) . ' results:' . PHP_EOL);
-
-				if ($searchResults) {
-					foreach ($searchResults as $searchKey => $result) {
-						fwrite(STDOUT, "\t{$searchKey}. {$result['name']}" . PHP_EOL);
-					}
-					fwrite(STDOUT, "\t0. cancel" . PHP_EOL . PHP_EOL . 'which to delete?' . PHP_EOL . '>');
-
-					while (true) {
-						$deleteRequest = strtolower(trim(fgets(STDIN)));
-						$deleteRequest = preg_replace('~\W~', '', $deleteRequest);
-						if (preg_match('~^[0(0?cancel)]$~', $deleteRequest)) {
-							break;
-						}
-
-						$toDelete = NULL;
-						foreach ($searchResults as $searchKey => $result) {
-							if (preg_match("~^[{$searchKey}{$result['name']}]\$~", $deleteRequest)) {
-								$toDelete = $result;
-								break;
-							}
-						}
-
-						if ($toDelete) {
-							fwrite(STDOUT, PHP_EOL . "really delete {$toDelete['name']}? (y/n)" . PHP_EOL . '>');
-							$confirm = strtolower(trim(fgets(STDIN)));
-							while (!preg_match('~^[(y(es)?)(no?)]$~', $confirm)) {
-								fwrite(STDOUT, '(y/n)' . PHP_EOL . '>');
-								$confirm = strtolower(trim(fgets(STDIN)));
-							}
-							if (preg_match('~^y(es)?$~', $confirm)) {
-								unset($contacts[$toDelete['key']]);
-								$fileContents = implode(PHP_EOL, $contacts);
-								$handle = fopen($filename, 'w');
-								$success = fwrite($handle, $fileContents);
-								fwrite(STDOUT, ($success ? "successfully deleted contact: {$toDelete['name']}" : 'something went wrong!') . PHP_EOL);
-								fclose($handle);
-							} elseif (preg_match('~^no?$~', $confirm)) {
-								fwrite(STDOUT, PHP_EOL . 'enter contact name to delete' . PHP_EOL . 'enter -list to see all or 0 to cancel' . PHP_EOL);
-								break;
-							}
-						} else {
-							fwrite(STDOUT, PHP_EOL . 'must enter valid number or name from list' . PHP_EOL . '>');
-						}
-					}
-				} else {
-					fwrite(STDOUT, PHP_EOL . 'search again? (y/n)' . PHP_EOL . '>');
-					$confirm = strtolower(trim(fgets(STDIN)));
-					while (!preg_match('~^[(y(es)?)(no?)]$~', $confirm)) {
-						fwrite(STDOUT, '(y/n)' . PHP_EOL . '>');
-						$confirm = strtolower(trim(fgets(STDIN)));
-					}
-					if (preg_match('~^no?$~', $confirm)) {
-						return;
-					} elseif (preg_match('~^y(es)?$~', $confirm)) {
-						fwrite(STDOUT, PHP_EOL . 'enter contact name to delete' . PHP_EOL . 'enter -list to see all or 0 to cancel' . PHP_EOL);
-					}
-				}
-				break;
+	if ($duplicate !== NULL) {
+		echo PHP_EOL . "contact \"{$duplicate['contact']['name']}\" already exists" . PHP_EOL . 'overwrite? (y/n)' . PHP_EOL . '>';
+		$confirm = confirm();
+		if ($confirm) {
+			unset($contacts[$duplicate['index']]);
+			$fileContents = implode(PHP_EOL, $contacts);
+			$filename = 'contacts.txt';
+			$handle = fopen($filename, 'w');
+			fwrite($handle, $fileContents);
+			fclose($handle);
+			return true;
+		} else {
+			return false;
 		}
 	}
 }
 
 function addContact()
 {
-	$filename = 'contacts.txt';
-	$handle = fopen($filename, 'a');
-
-	fwrite(STDOUT, PHP_EOL . 'enter name' . PHP_EOL . '>');
+	echo PHP_EOL . 'enter name' . PHP_EOL . '>';
 	$name = preg_replace('~  +~', ' ', trim(fgets(STDIN)));
 	while (preg_match('~[^a-zA-Z ]~', $name) or $name === '') {
 		if ($name === '0') {
-			fwrite(STDOUT, PHP_EOL);
+			echo PHP_EOL;
 			return;
 		}
-		fwrite(STDOUT, PHP_EOL . (!$name ? 'must enter name' : 'name must consist only of letters and spaces') . PHP_EOL . 'enter 0 to cancel' . PHP_EOL . '>');
+		echo PHP_EOL . (!$name ? 'must enter name' : 'name must consist only of letters and spaces') . PHP_EOL . 'enter 0 to cancel' . PHP_EOL . '>';
 		$name = trim(fgets(STDIN));
 	}
 
-	fwrite(STDOUT, PHP_EOL . 'enter phone number' . PHP_EOL . '>');
+	$duplicate = checkForDuplicates($name);
+	if ($duplicate === false) {
+		echo PHP_EOL . 'contact was not overwritten' . PHP_EOL . 'press enter to return to main menu' . PHP_EOL;
+		fgets(STDIN);
+		return;
+	}
+
+	echo PHP_EOL . 'enter phone number' . PHP_EOL . '>';
 	$number = preg_replace('~^\(?(\d{3})\)?[ -]?(\d{3})-?(\d{4})$~', '$1$2$3', trim(fgets(STDIN)));
 	while (preg_match('~\D~', $number) or strlen($number) !== 10) {
 		if ($number === '0') {
-			fwrite(STDOUT, PHP_EOL);
+			echo PHP_EOL;
 			return;
 		}
-		fwrite(STDOUT, PHP_EOL . 'must enter valid 10-digit phone number in any common format' . PHP_EOL . 'enter 0 to cancel' . PHP_EOL . '>');
+		echo PHP_EOL . 'must enter valid 10-digit phone number in any common format' . PHP_EOL . 'enter 0 to cancel' . PHP_EOL . '>';
 		$number = preg_replace('~^\(?(\d{3})\)?[ -]?(\d{3})-?(\d{4})$~', '$1$2$3', trim(fgets(STDIN)));
 	}
 
 	$contact = "$name|$number";
+	$filename = 'contacts.txt';
+	$handle = fopen($filename, 'a');
 	$success = fwrite($handle, PHP_EOL . $contact);
 	fclose($handle);
-	fwrite(STDOUT, ($success ? PHP_EOL . 'successfully wrote new contact: ' . implode(' | ', parseContacts($contact)) : 'something went wrong!') . PHP_EOL . 'press enter to return to main menu' . PHP_EOL);
+	if ($success) {
+		$resultMessage = 'successfully wrote ' . ($duplicate ? '' : 'new ') . 'contact: ' . implode(' | ', parseContacts($contact));
+	} else {
+		$resultMessage = 'something went wrong!';
+	}
+	echo PHP_EOL . $resultMessage . PHP_EOL . 'press enter to return to main menu' . PHP_EOL;
 	fgets(STDIN);
 }
 
@@ -415,14 +365,16 @@ function searchContacts()
 {
 	$parsedContacts = parseContacts(getContacts());
 	if ($parsedContacts === NULL) {
-		fwrite(STDOUT, PHP_EOL . 'no contacts found' . PHP_EOL . PHP_EOL);
+		echo PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to previous menu' . PHP_EOL;
+		fgets(STDIN);
+		return NULL;
 	}
 	$search = '';
 	while ($search === '') {
-		fwrite(STDOUT, PHP_EOL . 'enter search term(s) space separated' . PHP_EOL . '>');
+		echo PHP_EOL . 'enter search term(s) space separated' . PHP_EOL . '>';
 		$search = (trim(fgets(STDIN)));
 		$search = preg_replace(['~[^\w ]~', '~  +~'], ['', ' '], $search);
-		if ($search == '0') return;
+		if ($search == '0') return NULL;
 		$search = preg_replace('~[^a-zA-Z ]~', '', $search);
 	}
 
@@ -447,14 +399,15 @@ function showDeleteMenu()
 {
 	$commands = ['menu', 'help', 'list', 'remembered', 'search', 'back'];
 	$menu = generateMenu('DELETE', $commands);
-	fwrite(STDOUT, PHP_EOL . $menu . PHP_EOL . PHP_EOL);
+	echo PHP_EOL . $menu . PHP_EOL . PHP_EOL;
 }
 
 function deleteMenu()
 {
 	showDeleteMenu();
 	while (true) {
-		fwrite(STDOUT, '>');
+		clearstatcache();
+		echo '>';
 		$input = strtolower(trim(fgets(STDIN)));
 		$input = preg_replace(['~  +~', '~[^\w ]~'], [' ', ''], $input);
 		$command = explode(' ', $input);
@@ -475,7 +428,7 @@ function deleteMenu()
 				break;
 			case '4':
 			case 'remembered':
-				fwrite(STDOUT, 'not yet implemented' . PHP_EOL . PHP_EOL);
+				echo PHP_EOL . 'not yet implemented' . PHP_EOL . PHP_EOL;
 				break;
 			case '5':
 			case 'search':
@@ -489,7 +442,7 @@ function deleteMenu()
 				exit(0);
 				break;
 			default:
-				fwrite(STDOUT, 'command not recognized -- type "menu" for commands' . PHP_EOL . PHP_EOL);
+				echo 'command not recognized -- type "menu" for commands' . PHP_EOL . PHP_EOL;
 				break;
 		}
 	}
@@ -573,53 +526,59 @@ function help($mode, $command)
 			}
 			break;
 	}
-	fwrite(STDOUT, $message . PHP_EOL . PHP_EOL);
+	echo $message . PHP_EOL . PHP_EOL;
+}
+
+function mainMenu()
+{
+	showMainMenu();
+
+	while (true) {
+		clearstatcache();
+		echo '>';
+		$input = strtolower(trim(fgets(STDIN)));
+		$input = preg_replace(['~  +~', '~[^\w ]~'], [' ', ''], $input);
+		$command = explode(' ', $input);
+		isset($command[1]) ?: $command[1] = NULL;
+		switch ($command[0]) {
+			case '1':
+			case 'menu':
+				showMainMenu();
+				break;
+			case '2':
+			case 'help':
+				help('main', $command[1]);
+				break;
+			case '3':
+			case 'list':
+				listContacts('CONTACTS LIST', parseContacts(getContacts()));
+				break;
+			case '4':
+			case 'add':
+				addContact();
+				showMainMenu();
+				break;
+			case '5':
+			case 'search':
+				$searchResults = searchContacts();
+				if ($searchResults !== NULL) listContacts('SEARCH  RESULTS', $searchResults);
+				break;
+			case '6':
+			case 'delete':
+				deleteMenu();
+				showMainMenu();
+				break;
+			case '0':
+			case 'exit':
+				return;
+			default:
+				echo 'command not recognized -- type "menu" for commands' . PHP_EOL . PHP_EOL;
+				break;
+		}
+	}
 }
 
 mb_internal_encoding('UTF-8');
 mainMenu();
-
-while (true) {
-	clearstatcache();
-	fwrite(STDOUT, '>');
-	$input = strtolower(trim(fgets(STDIN)));
-	$input = preg_replace(['~  +~', '~[^\w ]~'], [' ', ''], $input);
-	$command = explode(' ', $input);
-	isset($command[1]) ?: $command[1] = NULL;
-	switch ($command[0]) {
-		case '1':
-		case 'menu':
-			mainMenu();
-			break;
-		case '2':
-		case 'help':
-			help('main', $command[1]);
-			break;
-		case '3':
-		case 'list':
-			listContacts('CONTACTS LIST', parseContacts(getContacts()));
-			break;
-		case '4':
-		case 'add':
-			addContact();
-			mainMenu();
-			break;
-		case '5':
-		case 'search':
-			listContacts('SEARCH  RESULTS', searchContacts());
-			break;
-		case '6':
-		case 'delete':
-			deleteMenu();
-			mainMenu();
-			break;
-		case '7':
-		case 'exit':
-			break 2;
-		default:
-			fwrite(STDOUT, 'command not recognized -- type "menu" for commands' . PHP_EOL . PHP_EOL);
-			break;
-	}
-}
 
 exit(0);
