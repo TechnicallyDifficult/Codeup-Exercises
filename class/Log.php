@@ -2,7 +2,7 @@
 
 class Log
 {
-	public $filename = './logs/log.txt';
+	public $filename = 'log.log';
 
 	public function logMessage($logLevel, $message)
 	{
@@ -19,5 +19,11 @@ class Log
 	public function error($message = 'This is an error message.')
 	{
 		$this->logMessage('ERROR', $message);
+	}
+
+	public function clear()
+	{
+		$handle = fopen($this->filename, 'w');
+		fclose($handle);
 	}
 }
