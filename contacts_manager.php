@@ -50,7 +50,7 @@ function parseContacts($contacts)
 	return $contacts;
 }
 
-function generateList($title, $parsedContacts, $last = false)
+function generateList($title, $parsedContacts, $cancel = false)
 {
 	$longest = 1;
 
@@ -72,14 +72,15 @@ function generateList($title, $parsedContacts, $last = false)
 		$list[] = ['  └──────────', '┴──────────────────┘'];
 	}
 
+	echo $longest;
+
 	$linelength = $longest % 2 === 1 ? $longest + 32 : $longest + 33;
 
 	foreach ($list as $index => &$line) {
 		while (mb_strlen(implode('', $line)) < $linelength) {
 			switch ($index) {
-				case sizeof($list) - 3:
-					if (!$last) goto end;
 				case 0:
+					case0:
 				case 2:
 				case 4:
 				case sizeof($list) - 1:
@@ -88,8 +89,10 @@ function generateList($title, $parsedContacts, $last = false)
 				case 1:
 				case 3:
 					$line[1] .= ' ';
+				case sizeof($list) - 3:
+					if ($cancel) goto case0;
 				default:
-					end:
+					case_default:
 					$line[0] .= ' ';
 					break;
 			}
@@ -184,13 +187,13 @@ function showMainMenu()
 	echo PHP_EOL . $menu . PHP_EOL . PHP_EOL;
 }
 
-function listContacts($title, $parsedContacts, $last = false)
+function listContacts($title, $parsedContacts, $cancel = false)
 {
 	if ($parsedContacts === NULL) {
 		echo PHP_EOL . 'no contacts found' . PHP_EOL . 'press enter to return to main menu' . PHP_EOL;
 		return;
 	}
-	echo PHP_EOL . generateList($title, $parsedContacts, $last) . PHP_EOL . PHP_EOL;
+	echo PHP_EOL . generateList($title, $parsedContacts, $cancel) . PHP_EOL . PHP_EOL;
 }
 
 function confirm()
