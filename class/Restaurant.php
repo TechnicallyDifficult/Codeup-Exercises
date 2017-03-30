@@ -1,8 +1,5 @@
 <?php
 
-/**
-* 
-*/
 class Restaurant {
 	
 	public $name;
@@ -10,6 +7,16 @@ class Restaurant {
 	public $menu = [];
 	public $rating;
 	public $orderProcess = ['orderItem' => NULL, 'orderMade' => false, 'tableDirty' => false];
+
+	public function __construct($name, $open, $close, array $menu, $rating)
+	{
+		$this->name = $name;
+		$this->hours['open'] = $open;
+		$this->hours['close'] = $close;
+		$this->menu = array_values($menu);
+		$this->rating = $rating;
+
+	}
 
 	public function takeOrder($order = NULL)
 	{

@@ -8,6 +8,14 @@ class Car {
 	public $on = false;
 	public $speed = 0;
 
+	public function __construct($make, $model, $color, $miles = 0)
+	{
+		$this->make = $make;
+		$this->model = $model;
+		$this->color = $color;
+		$this->miles = $miles;
+	}
+
 	public function turnOn()
 	{
 		if ($this->on) {

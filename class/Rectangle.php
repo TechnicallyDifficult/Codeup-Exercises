@@ -5,10 +5,18 @@ class Rectangle {
 	public $width;
 	public $area;
 
+	public function __construct($length, $width)
+	{
+		$this->length = (int) $length;
+		$this->width = (int) $width;
+		$this->area = $this->calculateArea();
+	}
+
 	public function calculateArea()
 	{
-		$this->area = $this->length * $this->width;
-		echo "area is $this->area" . PHP_EOL;
+		$area = $this->length * $this->width;
+		echo "area is $area" . PHP_EOL;
+		return $area;
 	}
 
 	public function changeDimensions($l = 1, $w = 1)
@@ -18,6 +26,6 @@ class Rectangle {
 		$this->width = (int) $w;
 		echo "new width is $this->width" . PHP_EOL;
 		echo 'new ';
-		$this->calculateArea();
+		$this->area = $this->calculateArea();
 	}
 }

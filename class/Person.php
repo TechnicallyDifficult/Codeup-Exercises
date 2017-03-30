@@ -7,6 +7,18 @@ class Person {
 	public $employed = false;
 	public $dead = false;
 
+	public function __construct($name, $age, $employed = false, $dead = false)
+	{
+		if ($employed and $dead) {
+			echo 'They can\'t still be employed if they\'re dead!' . PHP_EOL;
+			$employed = false;
+		}
+		$this->name = $name;
+		$this->age = $age;
+		$this->employed = $employed;
+		$this->dead = $dead;
+	}
+
 	public function returnName()
 	{
 		return $this->name;

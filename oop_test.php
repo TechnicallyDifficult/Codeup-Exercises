@@ -2,9 +2,7 @@
 
 // require_once './class/Person.php';
 
-// $bob = new Person();
-// $bob->name = 'Bob';
-// $bob->age = "43";
+// $bob = new Person('Bob', '43');
 
 // echo $bob->returnName() . PHP_EOL;
 
@@ -27,11 +25,7 @@
 
 // require_once './class/Pet.php';
 
-// $yoshi = new Pet();
-// $yoshi->name = 'Yoshi';
-// $yoshi->species = 'yoshi';
-// $yoshi->color = 'green';
-// $yoshi->weight = '400';
+// $yoshi = new Pet('Yoshi', 'yoshi', 'green', 400);
 
 // var_dump($yoshi);
 
@@ -47,9 +41,7 @@
 
 // require_once './class/Car.php';
 
-// $car = new Car();
-// $car->make = 'idk';
-// $car->model = 'idk';
+// $car = new Car('idk', 'idk', 'blue');
 
 // function demoAll_car($car) {
 // 	var_dump($car);
@@ -99,12 +91,7 @@
 
 // require_once './class/Restaurant.php';
 
-// $restaurant = new Restaurant();
-// $restaurant->name = 'idk Cafe';
-// $restaurant->hours['open'] = '8 AM';
-// $restaurant->hours['close'] = '10 PM';
-// $restaurant->menu = ['burger', 'coffee', 'salad', 'tea', 'cookie'];
-// $restaurant->rating = 3;
+// $restaurant = new Restaurant('idk Cafe', '8 AM', '10 PM', ['burger', 'coffee', 'salad', 'tea', 'cookie'], 3);
 
 // $restaurant->takeOrder('burger');
 
@@ -122,10 +109,7 @@
 
 // require_once './class/Rectangle.php';
 
-// $rectangle = new Rectangle();
-
-// $rectangle->length = 2;
-// $rectangle->width = 3;
+// $rectangle = new Rectangle(2, 3);
 
 // var_dump($rectangle);
 
@@ -139,11 +123,6 @@
 
 // require_once './class/User.php';
 
-// $anon = new User();
-
-// $anon->username = 'anonymous';
-// $anon->email = 'anonymous@null.com';
-// $anon->password = 'password';
-// $anon->date_created = 'forever';
+// $anon = new User('anonymous', 'anonymous@null.com', 'password', 'forever');
 
 // var_dump($anon->returnUserInformation());

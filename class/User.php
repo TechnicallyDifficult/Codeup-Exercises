@@ -7,6 +7,14 @@ class User {
 	public $password;
 	public $date_created;
 
+	public function __construct($username, $email, $password, $date_created)
+	{
+		$this->username = $username;
+		$this->email = $email;
+		$this->password = $password;
+		$this->date_created = $date_created;
+	}
+
 	public function returnUserInformation()
 	{
 		$userInfo = [
