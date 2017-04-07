@@ -5,28 +5,26 @@ function multiply($a, $b)
 	if (!is_string($a) or !is_string($b) or !is_numeric($a) or !is_numeric($b)) {
 		trigger_error('Both parameters must be numeric strings.', E_USER_WARNING);
 	}
-	$A = $a;
-	$B = $b;
 
-	$negCoefficient = rememberNegative($A, $B);
+	$negCoefficient = rememberNegative($a, $b);
 
-	$A = removeExtraZeroes($A);
-	$B = removeExtraZeroes($B);
+	$a = removeExtraZeroes($a);
+	$b = removeExtraZeroes($b);
 
-	$decimalPlaces = rememberDecimals($A) + rememberDecimals($B);
+	$decimalPlaces = rememberDecimals($a) + rememberDecimals($b);
 
-	$A = array_reverse(str_split($A));
-	$B = array_reverse(str_split($B));
+	$a = strrev($a);
+	$b = strrev($b);
 
-	$products = multiplyArrays($A, $B);
+	$products = multiplyStrings($a, $b);
 
 	padWithZeroes($products);
 
 	$sum = addProducts($products);
 
-	$result = implode('', array_reverse($sum));
+	$sum = recallDecimals($sum, $decimalPlaces);
 
-	$result = recallDecimals($result, $decimalPlaces);
+	$result = strrev($sum);
 
 	$result = removeExtraZeroes($result);
 
@@ -48,9 +46,8 @@ function rememberDecimals(&$str)
 
 function recallDecimals($str, $decimals)
 {
-	$newStr = strrev($str);
-	$newStr = substr($newStr, 0, $decimals) . '.' . substr($newStr, $decimals);
-	return strrev($newStr);
+	$newStr = substr($str, 0, $decimals) . '.' . substr($str, $decimals);
+	return $newStr;
 }
 
 function rememberNegative(&$a, &$b)
@@ -76,54 +73,48 @@ function removeExtraZeroes($str)
 	return preg_replace(['#^0*(\d+)#', '#(?:\.(\d*[1-9]+)*0+)$#', '#\.$#'], ['$1', '.$1', ''], $str);
 }
 
-function multiplyArrays($A, $B)
+function multiplyStrings($a, $b)
 {
 	$products = [];
-	foreach ($B as $indexOfB => $b) {
-		$products[] = [];
-		foreach ($A as $indexOfA => $a) {
-			$digitProduct = (int) $b * (int) $a;
-			isset($products[$indexOfB][$indexOfA]) ? $products[$indexOfB][$indexOfA] += $digitProduct : $products[$indexOfB][$indexOfA] = $digitProduct;
-			carryTheOne($products[$indexOfB], $indexOfA);
+	for ($i = 0; $i < strlen($b); $i++) {
+		$products[$i] = '';
+		$carry = '0';
+		for ($j = 0; $j < strlen($a); $j++) {
+			$digit = strrev((string) (((int) $b[$i] * (int) $a[$j]) + (int) strrev($carry)));
+			$products[$i] .= $digit[0];
+			$carry = strlen($digit) > 1 ? substr($digit, 1) : '0';
 		}
-		carryTheOne($products[$indexOfB], sizeof($products[$indexOfB]) - 1);
+		$products[$i] .= $carry;
 	}
 	return $products;
-}
-
-function carryTheOne(&$array, $index)
-{
-	if (strlen((string) $array[$index]) > 1) {
-		if ($index < sizeof($array) - 1) {
-			$array[$index + 1] += (int) substr((string) $array[$index], 0, 1);
-		} else {
-			$array[] = (int) substr((string) $array[$index], 0, 1);
-		}
-		$array[$index] = (int) substr($array[$index], 1);
-	}
 }
 
 function padWithZeroes(&$addends)
 {
 	foreach ($addends as $index => &$addend) {
 		for ($i = 0; $i < $index; $i++) {
-			array_unshift($addend, 0);
+			$addend = '0' . $addend;
 		}
 		for ($i = $index; $i < sizeof($addends) - 1; $i++) {
-			$addend[] = 0;
+			$addend .= '0';
 		}
 	}
 }
 
 function addProducts($addends)
 {
-	$result = array_fill(0, sizeof($addends[0]), 0);
-	foreach ($addends as $addend) {
-		foreach ($addend as $index => $digit) {
-			isset($result[$index]) ? $result[$index] += $digit : $result[$index] = $digit;
-			carryTheOne($result, $index);
+	$result = '';
+	$carry = '';
+	for ($i = 0; $i < strlen($addends[0]); $i++) {
+		$digit = 0;
+		foreach ($addends as $addend) {
+			$digit += (int) $addend[$i];
 		}
-		carryTheOne($result, sizeof($result) - 1);
+		$digit = strrev((string) ($digit + (int) strrev($carry)));
+		$result .= $digit[0];
+		$carry = strlen($digit) > 1 ? substr($digit, 1) : '';
 	}
+	$result .= $carry;
+
 	return $result;
 }
