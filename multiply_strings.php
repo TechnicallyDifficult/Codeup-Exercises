@@ -104,6 +104,22 @@ function increment($x)
 	return $x;
 }
 
+function multiplyStrings2($a, $b)
+{
+	$result = $a;
+	for ($i = 0; $i < strlen($a); $i++) {
+		$segment = substr($a, $i);
+		for ($j = 0; $j < strlen($b); $j++) {
+			$carry = 
+		}
+	}
+}
+
+function multiplyStringsSwitch($a, $b)
+{
+
+}
+
 function addStrings($a, $b)
 {
 	padStrings($a, $b);
