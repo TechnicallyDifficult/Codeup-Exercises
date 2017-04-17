@@ -2,8 +2,9 @@
 
 class Log {
 
-	public $filename;
-	public $handle = NULL;
+	private $filename;
+	private $handle;
+	private $deletable = false;
 
 	public function __construct($prefix = 'log')
 	{
@@ -12,72 +13,82 @@ class Log {
 
 	public function __destruct()
 	{
-		fclose($this->handle);
+		$this->closeFile();
 	}
 
 	public function changePrefix($prefix = 'log')
 	{
+		if (gettype($prefix) !== 'string') $prefix = 'log';
 		$basename = "$prefix-" . date('Y-m-d');
 		$this->setFilename($basename);
 	}
 
 	public function setFilename($basename = '')
 	{
+		if (isset($this->handle)) $this->closeFile();
+
+		if (gettype($basename) !== 'string') $basename = '';
+
 		$basename = preg_replace(['#[\/\\?%*:|"<>\s]#', '#\.\.+#', '#^\.#'], ['', '.', ''], $basename);
+
 		if ($basename === '') {
 			$this->changePrefix();
 		} else {
 			$this->filename = $basename . '.log';
+			$this->deleteable = !file_exists($this->filename);
 			$this->openFile('a');
-			$this->echoCurrentFile();
 		}
 	}
 
-	public function openFile($mode)
+	private function openFile($mode)
 	{
-		is_null($this->handle) ?: fclose($this->handle);
+		if (isset($this->handle)) $this->closeFile();
+
+		is_writable($this->filename)
+			or die;
+
+		touch($this->filename)
+			or die;
+
 		$this->handle = fopen($this->filename, $mode);
 	}
 
-	public function echoCurrentFile()
+	private function closeFile()
 	{
-		echo PHP_EOL . "current file: \"$this->filename\"" . PHP_EOL . PHP_EOL;
+		fclose($this->handle);
+
+		if ($this->deletable) unlink($this->filename);
 	}
 
-	public function logMessage($logLevel = 'LOG', $message = 'log')
+	public function getFilename()
 	{
-		echo PHP_EOL . "writing to file: \"$this->filename\"" . PHP_EOL;
-		$success = fwrite($this->handle, PHP_EOL . date('Y-m-d G:i:s') . " [$logLevel] $message");
-		echo ($success ? 'log successfully written!' : 'something went wrong!') . PHP_EOL . PHP_EOL;
+		return $this->filename;
 	}
 
-	public function info($message = 'This is an info message.')
+	public function log($logLevel = 'LOG', $message = 'log')
 	{
-		echo PHP_EOL . 'logging info message';
-		$this->logMessage('INFO', $message);
+		$this->deletable = false;
+
+		return fwrite($this->handle, PHP_EOL . date('Y-m-d G:i:s') . " [$logLevel] $message");
 	}
 
-	public function error($message = 'This is an error message.')
+	public function info($message = 'info')
 	{
-		echo PHP_EOL . 'logging error message';
-		$this->logMessage('ERROR', $message);
+		if (gettype($message) !== 'string') $message = 'info';
+
+		$this->log('INFO', $message);
+	}
+
+	public function error($message = 'error')
+	{
+		if (gettype($message) !== 'string') $message = 'error';
+
+		$this->log('ERROR', $message);
 	}
 
 	public function clear()
 	{
-		echo PHP_EOL . "clearing file: \"$filename\"" . PHP_EOL;
 		$this->openFile('w');
-		echo 'log file cleared!' . PHP_EOL . PHP_EOL;
-		$this->openFile('a');
-	}
-
-	public function view()
-	{
-		clearstatcache();
-		echo PHP_EOL . "getting logs from: \"$this->filename\"" . PHP_EOL . PHP_EOL;
-		$this->openFile('r');
-		$fileContents = filesize($this->filename) === 0 ? '' : trim(fread($this->handle, filesize($this->filename)));
-		echo '----------------------------------------------------------------' . PHP_EOL . $fileContents . PHP_EOL . '----------------------------------------------------------------' . PHP_EOL . PHP_EOL;
 		$this->openFile('a');
 	}
 }

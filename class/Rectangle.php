@@ -1,13 +1,33 @@
 <?php
 
 class Rectangle {
-	public $length;
-	public $width;
+	private $length;
+	private $width;
 
 	public function __construct($length, $width)
 	{
-		$this->length = (int) $length;
-		$this->width = (int) $width;
+		$this->setLength($length);
+		$this->setWidth($width);
+	}
+
+	private function setLength($x)
+	{
+		if (gettype($x) === 'integer') $this->length = $x;
+	}
+
+	private function setWidth($x)
+	{
+		if (gettype($x) === 'integer') $this->width = $x;
+	}
+
+	public function getLength()
+	{
+		return $this->length;
+	}
+
+	public function getWidth()
+	{
+		return $this->width;
 	}
 
 	public function area()
